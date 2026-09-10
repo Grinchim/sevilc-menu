@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sevil'c patisserie&cafe — Menü</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playball&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{ --primary:#560f16; --accent:#93191a; --bg:#e2d9cb; --card:#ffffff; --text:#2b1a1a; --text-inverse:#f7f1e8; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text);}
+  header.hero{
+    background:var(--primary);color:var(--text-inverse);text-align:center;
+    padding:56px 20px 40px;position:relative;overflow:hidden;
+  }
+  header.hero.has-banner{min-height:320px;background:#000;padding:0;}
+  header.hero .hero-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1s ease;z-index:0;background:#000;}
+  header.hero .hero-bg-img.active{opacity:1;}
+  header.hero .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.55));z-index:1;}
+  header.hero .hero-content{position:relative;z-index:2;}
+  header.hero .brand{font-family:'Playball',cursive;font-size:clamp(48px,9vw,72px);line-height:1;margin:0;}
+  header.hero .sub{letter-spacing:.08em;font-weight:400;font-size:14px;opacity:.85;margin-top:6px;}
+  header.hero .gold-line{width:60px;height:2px;background:var(--text-inverse);opacity:.5;margin:18px auto 0;}
+  header.hero .banner-dots{position:relative;z-index:2;display:flex;justify-content:center;gap:6px;margin-top:16px;}
+  header.hero .banner-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);}
+  header.hero .banner-dots span.active{background:#fff;}
+  main{max-width:900px;margin:0 auto;padding:28px 18px 80px;}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:var(--text-inverse);border:none;border-radius:20px;padding:8px 16px;font-size:13px;cursor:pointer;margin-bottom:18px;}
+  .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .cat-card{position:relative;border-radius:10px;overflow:hidden;height:160px;background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;border:none;padding:0;}
+  .cat-card.full{height:220px;grid-column:1 / -1;}
+  .cat-card .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55));}
+  .cat-card span{position:relative;color:#fff;font-weight:700;letter-spacing:.03em;padding:14px;font-size:16px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.4);}
+  .no-image-bg{background:linear-gradient(135deg,var(--accent),var(--primary));}
+  .product-list{display:flex;flex-direction:column;gap:16px;}
+  .product-card{background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+  .product-card img{width:100%;height:200px;object-fit:cover;display:block;}
+  .product-card .ph{width:100%;height:120px;background:linear-gradient(135deg,var(--accent),var(--primary));}
+  .product-info{background:var(--primary);color:var(--text-inverse);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .product-info b{font-size:14px;}
+  .product-info .price{color:#e8c15a;font-weight:700;white-space:nowrap;}
+  .product-desc{padding:10px 14px;font-size:12.5px;color:var(--text);opacity:.8;}
+  .empty{text-align:center;padding:30px;opacity:.6;font-size:14px;}
+  footer{text-align:center;padding:30px 20px;font-size:12px;color:#fff;opacity:.95;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+  footer .insta-link{display:inline-flex;margin-bottom:14px;color:#fff;}
+  footer .insta-link svg{width:26px;height:26px;}
+  footer .brand-name{font-weight:700;font-size:14px;letter-spacing:.05em;margin-bottom:14px;}
+  footer .footer-btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  footer .footer-btns a{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--primary);color:var(--primary);
+    padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;
+    text-decoration:none;background:var(--card);
+  }
+  .map-embed{max-width:900px;margin:0 auto;padding:0 18px;}
+  .map-embed iframe{width:100%;height:280px;border:0;border-radius:10px;display:block;}
+</style>
+</head>
+<body>
+<div id="app"><div class="empty">Yükleniyor…</div></div>
+<script>
+const SUPABASE_URL = 'https://yzfpdpcqnutckwdlqmbs.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dmkksQfzEfR25zPaKH6Rlg_OdistWcO';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let categories = [];
+let products = [];
+let banners = [];
+let theme = { primary:'#560f16', accent:'#93191a', bg:'#e2d9cb', backgroundImage:'', logo:'', instagram:'', mapsUrl:'', reviewsUrl:'', mapEmbedSrc:'' };
+let view = 'menu';
+let activeCategory = null;
+let bannerIndex = 0;
+let bannerTimer = null;
+
+function applyTheme(){
+  const r=document.documentElement.style;
+  r.setProperty('--primary', theme.primary);
+  r.setProperty('--accent', theme.accent);
+  r.setProperty('--bg', theme.bg);
+  if(theme.backgroundImage){
+    document.body.style.backgroundImage = `url('${theme.backgroundImage}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.backgroundRepeat = 'no-repeat';
+  } else {
+    document.body.style.backgroundImage = '';
+  }
+}
+function escapeHtml(str){ return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+async function loadData(){
+  const [{data:cats}, {data:prods}, {data:settings}, {data:bnrs}] = await Promise.all([
+    sb.from('categories').select('*').order('sort_order'),
+    sb.from('products').select('*').order('category_id').order('subgroup').order('sort_order'),
+    sb.from('settings').select('*'),
+    sb.from('banners').select('*').order('sort_order')
+  ]);
+  categories = cats || [];
+  products = prods || [];
+  banners = bnrs || [];
+  const themeRow = (settings||[]).find(s => s.key === 'theme');
+  if(themeRow){ try{ theme = JSON.parse(themeRow.value); }catch(e){} }
+  applyTheme();
+  render();
+}
+
+function render(){
+  const app = document.getElementById('app');
+  let html = `
+    <header class="hero ${banners.length>0?'has-banner':''}" id="heroHeader">
+      ${banners.map((b,i)=>`<img src="${escapeHtml(b.image)}" class="hero-bg-img ${i===0?'active':''}" data-banner-idx="${i}">`).join('')}
+      ${`<div class="hero-content">
+        ${theme.logo ? `<img src="${escapeHtml(theme.logo)}" alt="sevil'c" style="max-width:440px;max-height:280px;margin-top:-100px;">` : `<p class="brand">sevil'c</p>`}
+      </div>`}
+      ${banners.length>1 ? `<div class="banner-dots">${banners.map((b,i)=>`<span class="${i===0?'active':''}" data-dot-idx="${i}"></span>`).join('')}</div>` : ''}
+    </header>
+    <main>`;
+
+  if(view === 'menu'){
+    if(categories.length === 0){
+      html += `<div class="empty">Menü hazırlanıyor.</div>`;
+    } else {
+      html += `<div class="cat-grid">`;
+      categories.forEach((c,i) => {
+        const bgStyle = c.image ? `style="background-image:url('${escapeHtml(c.image)}')"` : '';
+        const fullClass = (categories.length % 2 === 1 && i === 0) ? ' full' : '';
+        html += `
+          <button class="cat-card${fullClass} ${c.image?'':'no-image-bg'}" ${bgStyle} data-cat="${c.id}">
+            <div class="overlay"></div>
+            <span>${escapeHtml(c.name)}</span>
+          </button>`;
+      });
+      html += `</div>`;
+    }
+    html += `<p style="text-align:center;font-size:14px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5);margin:22px 0 0;">Alerjen bilgisi için ekibimizle iletişime geçin.</p>`;
+  }
+
+  if(view === 'category' && activeCategory){
+    const cat = categories.find(c => c.id === activeCategory);
+    const prods = products.filter(p => p.category_id === activeCategory && p.in_stock !== false);
+    html += `<button class="back-btn" id="backBtn">← Menüye Dön</button>`;
+    html += `<h2 style="color:var(--primary);margin-top:0;">${escapeHtml(cat ? cat.name : '')}</h2>`;
+    if(prods.length === 0){
+      html += `<div class="empty">Bu kategoride henüz ürün yok.</div>`;
+    } else {
+      const groups = [];
+      prods.forEach(p=>{
+        const key = p.subgroup || '';
+        let g = groups.find(x=>x.key===key);
+        if(!g){ g = { key, items: [] }; groups.push(g); }
+        g.items.push(p);
+      });
+      groups.forEach(g=>{
+        if(g.key) html += `<h3 style="color:var(--primary);font-size:15px;margin:22px 0 10px;">${escapeHtml(g.key)}</h3>`;
+        html += `<div class="product-list">`;
+        g.items.forEach(p => {
+          html += `<div class="product-card">`;
+          html += p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : (theme.logo ? `<img src="${escapeHtml(theme.logo)}" alt="sevil'c" style="object-fit:contain;background:var(--primary);padding:24px;">` : `<div class="ph"></div>`);
+          html += `<div class="product-info"><b>${escapeHtml(p.name)}</b><span class="price">${escapeHtml(p.price)}₺</span></div>`;
+          if(p.description) html += `<div class="product-desc">${escapeHtml(p.description)}</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      });
+    }
+  }
+
+  html += `</main>
+    <footer>
+    ${theme.instagram ? `<a class="insta-link" href="${escapeHtml(theme.instagram)}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg>
+    </a><br>` : ''}
+    <div class="brand-name">sevil'c patisserie&amp;cafe</div>
+    <div class="footer-btns">
+      ${theme.mapsUrl ? `<a href="${escapeHtml(theme.mapsUrl)}" target="_blank" rel="noopener">📍 Yol Tarifi</a>` : ''}
+      ${theme.reviewsUrl ? `<a href="${escapeHtml(theme.reviewsUrl)}" target="_blank" rel="noopener">💬 Yorumlar</a>` : ''}
+    </div>
+  </footer>
+    ${theme.mapEmbedSrc ? `<div class="map-embed"><iframe src="${escapeHtml(theme.mapEmbedSrc)}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : ''}`;
+  app.innerHTML = html;
+
+  app.querySelectorAll('.cat-card').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ activeCategory = btn.dataset.cat; view='category'; render(); window.scrollTo(0,0); });
+  });
+  const backBtn = document.getElementById('backBtn');
+  if(backBtn) backBtn.addEventListener('click', ()=>{ view='menu'; render(); window.scrollTo(0,0); });
+
+  startBannerRotation();
+}
+
+function startBannerRotation(){
+  if(bannerTimer) clearInterval(bannerTimer);
+  if(banners.length < 2) return;
+  bannerTimer = setInterval(()=>{
+    const imgs = document.querySelectorAll('#heroHeader .hero-bg-img');
+    const dots = document.querySelectorAll('#heroHeader .banner-dots span');
+    if(!imgs.length) return;
+    bannerIndex = (bannerIndex + 1) % imgs.length;
+    imgs.forEach((el,i)=> el.classList.toggle('active', i===bannerIndex));
+    dots.forEach((el,i)=> el.classList.toggle('active', i===bannerIndex));
+  }, 5000);
+}
+
+loadData();
+</script>
+</body>
+</html>
